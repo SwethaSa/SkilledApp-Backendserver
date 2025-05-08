@@ -8,7 +8,7 @@ dotenv.config();
 
 const PORT = 4000;
 app.get("/", function (request, response) {
-  response.send("🙋‍♂️, 🌏 🎊✨🤩");
+  response.send("Hey There 🌏 🎊✨🤩");
 });
 
 const MONGO_URL = process.env.MONGO_URL;
