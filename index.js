@@ -13,7 +13,7 @@ app.use(cors());
 
 const PORT = 4000;
 app.get("/", function (request, response) {
-  response.send("🌏 🎊✨🤩");
+  response.send("Skill'Ed App");
 });
 
 const MONGO_URL = process.env.MONGO_URL;
