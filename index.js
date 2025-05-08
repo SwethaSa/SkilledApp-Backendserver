@@ -5,10 +5,11 @@ import usersRouter from "./routes/users.route.js";
 
 import * as dotenv from "dotenv";
 dotenv.config();
+app.use(express.json());
 
 const PORT = 4000;
 app.get("/", function (request, response) {
-  response.send("Hey There  how are you ?🌏 🎊✨🤩");
+  response.send("🌏 🎊✨🤩");
 });
 
 const MONGO_URL = process.env.MONGO_URL;
