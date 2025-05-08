@@ -68,6 +68,8 @@ router.post("/login", async function (req, res) {
 
     if (isPasswordMatch) {
       const token = jwt.sign({ id: userFromDB._id }, process.env.SECRET_KEY);
+      console.log("SECRET_KEY:", process.env.SECRET_KEY);
+
       res.send({ message: "Login Success", token: token });
     } else {
       res.status(401).send({ message: "Invalid Credentials" });
