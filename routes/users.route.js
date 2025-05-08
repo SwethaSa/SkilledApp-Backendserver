@@ -18,7 +18,7 @@ async function generateHashedPassword(password) {
   return hashedPassword;
 }
 //GET USER DATA
-router.get("/", async function (req, res) {
+router.get("/", auth, async function (req, res) {
   const dbData = await getAllUsers();
   res.send(dbData);
 });
