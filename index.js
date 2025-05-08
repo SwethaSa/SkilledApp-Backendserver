@@ -2,10 +2,12 @@ import express from "express";
 const app = express();
 import { MongoClient } from "mongodb";
 import usersRouter from "./routes/users.route.js";
+import cors from "cors";
 
 import * as dotenv from "dotenv";
 dotenv.config();
 app.use(express.json());
+app.use(cors());
 
 const PORT = 4000;
 app.get("/", function (request, response) {
