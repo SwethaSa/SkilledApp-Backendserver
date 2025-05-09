@@ -20,7 +20,7 @@ export async function getCoursesByTopic(topic) {
   return await client
     .db("skilled")
     .collection("courses")
-    .find({ topic })
+    .find({ topic: { $regex: new RegExp(`^${topic}$`, "i") } })
     .toArray();
 }
 
