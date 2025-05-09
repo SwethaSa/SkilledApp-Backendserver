@@ -25,7 +25,7 @@ console.log("Mongo is connected successfully!");
 app.use("/users", usersRouter);
 app.use("/auth", authRouter);
 app.use("/course", courseRouter);
-app.use("/progress", courseRouter); // Assuming you have a progress route
+app.use("/progress", progressRouter); // Assuming you have a progress route
 
 app.listen(PORT, () => console.log(`The server started in: ${PORT} ✨✨`));
 export { client };
