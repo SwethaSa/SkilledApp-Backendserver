@@ -1,37 +1,45 @@
+// routes/progress.route.js
+
 import express from "express";
 import { auth } from "../middleware/auth.js";
-import { updateProgress, markCompleted } from "../services/progress.service.js";
+import { updateProgress, getProgress } from "../services/progress.service.js";
 
 const router = express.Router();
 
-// UPDATE PROGRESS
-router.post("/", auth, async (req, res) => {
-  const { courseId, moduleIndex, isCompleted } = req.body;
-  const userId = req.user.id;
-
-  await updateProgress(userId, courseId, moduleIndex, isCompleted);
-  res.send({ message: "Progress updated" });
+// 1️⃣ Fetch a user's progress for a given course
+//    GET /progress/:userId/:courseId
+router.get("/:userId/:courseId", async (req, res) => {
+  const { userId, courseId } = req.params;
+  if (!userId || !courseId) {
+    return res.status(400).json({ message: "Missing userId or courseId" });
+  }
+  try {
+    const doc = await getProgress(userId, courseId);
+    // doc.progress is an object like { "0": true, "1": false, ... }
+    res.json({ progress: doc?.progress || {} });
+  } catch (err) {
+    console.error("Error fetching progress:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
 });
 
-// utils/progress.js
+// 2️⃣ Update (or create) progress for one module
+//    POST /progress/:userId
+//    body: { courseId, moduleIndex, completed: true|false }
+router.post("/:userId", auth, async (req, res) => {
+  const { userId } = req.params;
+  const { courseId, moduleIndex, completed } = req.body;
 
-// GET USER PROGRESS
-router.post("/:courseId", async (req, res) => {
-  const courseId = req.params.courseId;
-  const { userId, moduleIndex } = req.body;
-
-  if (!userId || moduleIndex === undefined) {
-    return res
-      .status(400)
-      .json({ error: "userId and moduleIndex are required" });
+  if (!courseId || moduleIndex === undefined) {
+    return res.status(400).json({ message: "Missing courseId or moduleIndex" });
   }
 
   try {
-    await markCompleted(client, userId, courseId, moduleIndex);
-    res.json({ success: true });
+    await updateProgress(userId, courseId, moduleIndex, completed);
+    res.json({ message: "Progress updated" });
   } catch (err) {
-    console.error("Error marking progress:", err);
-    res.status(500).json({ error: "Failed to mark progress" });
+    console.error("Error updating progress:", err);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
