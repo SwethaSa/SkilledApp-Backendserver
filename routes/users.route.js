@@ -1,9 +1,13 @@
 import express from "express";
 const router = express.Router();
+
 import {
   createUsers,
   getAllUsers,
   getUserByName,
+  getUserById,
+  updateUserById,
+  deleteUserById,
 } from "../services/users.service.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -80,6 +84,49 @@ router.post("/login", async function (req, res) {
     } else {
       res.status(401).send({ message: "Invalid Credentials" });
     }
+  }
+});
+
+// GET USER BY ID
+router.get("/:id", auth, async function (req, res) {
+  const { id } = req.params;
+  try {
+    const user = await getUserById(id);
+    if (!user) {
+      return res.status(404).send({ message: "User not found" });
+    }
+    res.send(user);
+  } catch (error) {
+    res.status(500).send({ message: error.message });
+  }
+});
+
+// UPDATE USER BY ID
+router.put("/:id", auth, async function (req, res) {
+  const { id } = req.params;
+  const updateData = req.body;
+
+  if (updateData.password) {
+    // If password is being updated, hash it
+    updateData.password = await generateHashedPassword(updateData.password);
+  }
+
+  try {
+    const result = await updateUserById(id, updateData);
+    res.send(result);
+  } catch (error) {
+    res.status(500).send({ message: error.message });
+  }
+});
+
+// DELETE USER BY ID
+router.delete("/:id", auth, async function (req, res) {
+  const { id } = req.params;
+  try {
+    const result = await deleteUserById(id);
+    res.send(result);
+  } catch (error) {
+    res.status(500).send({ message: error.message });
   }
 });
 
