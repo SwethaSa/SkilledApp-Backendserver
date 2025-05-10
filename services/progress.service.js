@@ -20,3 +20,12 @@ export async function getProgress(userId, courseId) {
     .collection("progress")
     .findOne({ userId, courseId });
 }
+
+export async function getNewProgress(userId) {
+  const uid = String(userId).trim();
+  return client
+    .db("skilled")
+    .collection("progress")
+    .find({ userId: uid })
+    .toArray();
+}
