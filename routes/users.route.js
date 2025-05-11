@@ -79,41 +79,33 @@ router.post("/signup", async function (req, res) {
 
 //LOGIN LOGIC
 router.post("/login", async function (req, res) {
-  const { identifier, password } = req.body; // 'identifier' can be name or email
+  const { email, password } = req.body;
 
-  let userFromDB;
-
-  // Check if the identifier is an email
-  if (identifier.includes("@")) {
-    userFromDB = await getUserByEmail(identifier);
-  } else {
-    userFromDB = await getUserByName(identifier);
-  }
-
-  console.log("userFromDB:", userFromDB);
+  const userFromDB = await getUserByEmail(email);
+  console.log("userFromDB: ", userFromDB);
 
   if (!userFromDB) {
     res.status(401).send({ message: "Invalid Credentials" });
     return;
-  }
-
-  const storedPassword = userFromDB.password;
-  const isPasswordMatch = await bcrypt.compare(password, storedPassword);
-  console.log("isPasswordMatch:", isPasswordMatch);
-
-  if (isPasswordMatch) {
-    const token = jwt.sign({ id: userFromDB._id }, process.env.SECRET_KEY);
-    console.log("SECRET_KEY:", process.env.SECRET_KEY);
-
-    res.send({
-      message: "Login Success",
-      token,
-      userId: userFromDB._id,
-      name: userFromDB.name,
-      email: userFromDB.email,
-    });
   } else {
-    res.status(401).send({ message: "Invalid Credentials" });
+    const storedPassword = userFromDB.password;
+    const isPasswordMatch = await bcrypt.compare(password, storedPassword);
+    console.log("isPasswordMatch: ", isPasswordMatch);
+
+    if (isPasswordMatch) {
+      const token = jwt.sign({ id: userFromDB._id }, process.env.SECRET_KEY);
+      console.log("SECRET_KEY:", process.env.SECRET_KEY);
+
+      res.send({
+        message: "Login Success",
+        token: token,
+        userId: userFromDB._id,
+        name: userFromDB.name,
+        email: userFromDB.email,
+      });
+    } else {
+      res.status(401).send({ message: "Invalid Credentials" });
+    }
   }
 });
 
