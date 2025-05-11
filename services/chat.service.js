@@ -35,7 +35,7 @@ export async function getChatsForMentor(mentorId) {
     .db("skilled")
     .collection("chats")
     .find({ participants: mentorId })
-    .sort({ lastTimestamp: -1 })
+    .sort({ lastTimestamp: 1 })
     .toArray();
 }
 
