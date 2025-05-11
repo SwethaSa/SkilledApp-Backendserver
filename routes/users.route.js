@@ -79,9 +79,9 @@ router.post("/signup", async function (req, res) {
 
 //LOGIN LOGIC
 router.post("/login", async function (req, res) {
-  const { email, password } = req.body;
+  const { name, password } = req.body;
 
-  const userFromDB = await getUserByEmail(email);
+  const userFromDB = await getUserByName(name);
   console.log("userFromDB: ", userFromDB);
 
   if (!userFromDB) {
