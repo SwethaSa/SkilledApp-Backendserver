@@ -21,6 +21,52 @@ import { auth } from "../middleware/auth.js";
 dotenv.config();
 import { createTransport } from "nodemailer";
 
+const emailHtml = `
+  <div style="
+    background: #ff5733;
+    padding: 30px;
+    font-family: 'YourFrontEndFont', sans-serif;
+    color: #ffffff;
+    text-align: center;
+  ">
+    <!-- Title -->
+    <h1 style="
+      margin: 0 0 20px;
+      font-size: 2rem;
+      font-weight: bold;
+    ">Skill’ED</h1>
+
+    <!-- Greeting -->
+    <p style="margin: 0 0 16px; font-size: 1rem;">
+      Hi ${user.name},
+    </p>
+
+    <!-- Instruction with styled link -->
+    <p style="margin: 0 0 24px; font-size: 1rem;">
+      Click the button below to reset your password:
+    </p>
+    <a
+      href="${resetLink}"
+      style="
+        display: inline-block;
+        padding: 12px 24px;
+        background: #ffffff;
+        color: #ff5733;
+        text-decoration: none;
+        font-weight: 500;
+        border-radius: 6px;
+      "
+    >
+      Reset Password
+    </a>
+
+    <!-- Footer note -->
+    <p style="margin: 32px 0 0; font-size: 0.875rem; opacity: 0.9;">
+      If you didn’t request a password reset, just ignore this email.
+    </p>
+  </div>
+`;
+
 const transporter = createTransport({
   host: "smtp.gmail.com",
   port: 465,
@@ -159,10 +205,7 @@ router.post("/forgot-password", async (req, res) => {
     const user = await findEmail(email);
 
     if (!user) {
-      return res.send({
-        message:
-          "If that email is registered, you’ll get a reset link shortly.",
-      });
+      return res.status(400).send({ message: "User doesn't exist" });
     }
 
     const token = jwt.sign({ id: user._id }, process.env.SECRET_KEY, {
@@ -176,12 +219,10 @@ router.post("/forgot-password", async (req, res) => {
       from: `"Skilled Support" <${process.env.SMTP_USER}>`,
       to: user.email,
       subject: "Your password reset link",
-      html: `<p>Hi ${user.name},</p><p>Click <a href="${resetLink}">here</a> to reset your password.</p>`,
+      html: emailHtml,
     });
 
-    res.send({
-      message: "If that email is registered, you’ll get a reset link shortly.",
-    });
+    res.send({ message: "Reset email sent" });
   } catch (err) {
     console.error("Error in /forgot-password:", err);
     res.status(500).send({ message: "Server error. Please try again later." });
