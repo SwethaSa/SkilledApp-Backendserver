@@ -174,7 +174,7 @@ router.post("/forgot-password", async (req, res) => {
   <div style="
     background: #ff5733;
     padding: 30px;
-    font-family: 'YourFrontEndFont', sans-serif;
+    font-family: 'Kite One', sans-serif;
     color: #ffffff;
     text-align: center;
   ">
@@ -247,6 +247,71 @@ router.post("/reset-password/:token", async (req, res) => {
   await deleteResetToken(token);
 
   res.send({ message: "Password has been reset successfully." });
+});
+
+// POST /contact
+router.post("/contact", async (req, res) => {
+  try {
+    const { name, email, message } = req.body;
+
+    const messageHtml = `
+  <div style="
+    background: #ff5733;
+    padding: 30px;
+    font-family: 'Kite One', sans-serif;
+    color: #ffffff;
+    text-align: center;
+  ">
+    <!-- Title -->
+    <h1 style="
+      margin: 0 0 20px;
+      font-size: 2rem;
+      font-weight: bold;
+    ">Skill’ED</h1>
+
+    <!-- Subheading -->
+    <h2 style="margin: 0 0 16px; font-size: 1.5rem;">New Message Received</h2>
+
+    <!-- Message details -->
+    <p style="margin: 0 0 8px; font-size: 1rem;">
+      <strong>Name:</strong> ${name}
+    </p>
+    <p style="margin: 0 0 8px; font-size: 1rem;">
+      <strong>Email:</strong> ${email}
+    </p>
+    <p style="margin: 16px 0 8px; font-size: 1rem;">
+      <strong>Message:</strong>
+    </p>
+    <p style="margin: 0 0 24px; font-size: 1rem;">
+      ${message}
+    </p>
+
+    <!-- Footer note -->
+    <p style="margin: 32px 0 0; font-size: 0.875rem; opacity: 0.9;">
+      This message was sent through the Skill’ED platform.
+    </p>
+  </div>
+`;
+
+    await transporter.sendMail({
+      from: `"Skill'ED Contact Form" <${process.env.SMTP_USER}>`,
+      to: process.env.SMTP_USER,
+      subject: `New Contact Form Submission from ${name}`,
+      html: messageHtml,
+    });
+
+    await transporter.sendMail({
+      from: `"Skill'ED" <${process.env.SMTP_USER}>`,
+      to: email,
+      subject: `Thanks for contacting Skill'ED!`,
+      html: messageHtml,
+    });
+
+    res.status(200).send({ message: "Emails sent successfully!" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: "Failed to send email." });
+  }
 });
 
 export default router;
