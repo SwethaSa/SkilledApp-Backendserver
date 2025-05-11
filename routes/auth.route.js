@@ -18,14 +18,12 @@ router.post("/google-login", async (req, res) => {
   }
 
   try {
-    // 1) Verify Google ID token
     const ticket = await googleClient.verifyIdToken({
       idToken,
       audience: CLIENT_ID,
     });
     const { email, name, picture, sub: googleId } = ticket.getPayload();
 
-    // 2) Find or create the user
     const usersCollection = mongoClient.db("skilled").collection("users");
     let user = await usersCollection.findOne({ email });
 
@@ -41,7 +39,6 @@ router.post("/google-login", async (req, res) => {
       user = { ...newUser, _id: result.insertedId };
     }
 
-    // 3) Sign a JWT with payload { id: user._id }
     const token = jwt.sign({ id: user._id }, SECRET_KEY, { expiresIn: "1h" });
 
     // 4) Return token and userId

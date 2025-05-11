@@ -10,8 +10,6 @@ import { auth } from "../middleware/auth.js"; // apply auth if needed
 
 const router = express.Router();
 
-// 1. Ensure chat exists or retrieve existing chatId
-// POST /chat
 router.post("/", auth, async (req, res, next) => {
   try {
     const { learnerId, mentorId } = req.body;
