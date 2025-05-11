@@ -14,7 +14,19 @@ import jwt from "jsonwebtoken";
 import * as dotenv from "dotenv";
 import { auth } from "../middleware/auth.js";
 dotenv.config();
+import nodemailer from "nodemailer";
 
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT,
+
+  secure: process.env.SMTP_SECURE === "true",
+
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
 async function generateHashedPassword(password) {
   const NO_OF_ROUNDS = 10;
   const salt = await bcrypt.genSalt(NO_OF_ROUNDS);
@@ -33,6 +45,11 @@ router.post("/signup", async function (req, res) {
 
   const userFromDB = await getUserByName(name);
   console.log("userFromDB: ", userFromDB);
+
+  const existingUserByEmail = await getUserByEmail(email);
+  if (existingUserByEmail) {
+    return res.status(400).send({ message: "Email already registered!" });
+  }
 
   if (userFromDB) {
     res.status(400).send({ message: "User Name already exists!" });
@@ -128,6 +145,61 @@ router.delete("/:id", auth, async function (req, res) {
   } catch (error) {
     res.status(500).send({ message: error.message });
   }
+});
+
+// POST /users/forgot-password
+router.post("/forgot-password", async (req, res) => {
+  const { email } = req.body;
+  const user = await client
+    .db("skilled")
+    .collection("users")
+    .findOne({ email });
+  if (!user) {
+    return res.send({
+      message: "If that email is registered, you’ll get a reset link shortly.",
+    });
+  }
+
+  const token = jwt.sign({ id: user._id }, process.env.SECRET_KEY, {
+    expiresIn: "1h",
+  });
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+  await saveResetToken(user._id, token, expiresAt);
+  const resetLink = `${process.env.FRONTEND_URL}/reset-password/${token}`;
+  await transporter.sendMail({
+    from: `"Skilled Support" <${process.env.SMTP_USER}>`,
+    to: user.email,
+    subject: "Your password reset link",
+    html: `
+      <p>Hi ${user.name},</p>
+      <p>Click <a href="${resetLink}">here</a> to reset your password. This link expires in 1 hour.</p>
+      <p>If you didn’t request this, just ignore.</p>
+    `,
+  });
+
+  res.send({
+    message: "If that email is registered, you’ll get a reset link shortly.",
+  });
+});
+
+router.post("/reset-password/:token", async (req, res) => {
+  const { token } = req.params;
+  const { newPassword } = req.body;
+
+  const doc = await getResetTokenDoc(token);
+  if (!doc || doc.expiresAt < new Date()) {
+    return res
+      .status(400)
+      .send({ message: "Reset link is invalid or has expired." });
+  }
+
+  const hashed = await generateHashedPassword(newPassword);
+
+  await updateUserById(doc.userId, { password: hashed });
+
+  await deleteResetToken(token);
+
+  res.send({ message: "Password has been reset successfully." });
 });
 
 export default router;
