@@ -4,7 +4,8 @@ import { MongoClient } from "mongodb";
 import usersRouter from "./routes/users.route.js";
 import authRouter from "./routes/auth.route.js";
 import courseRouter from "./routes/course.route.js";
-import progressRouter from "./routes/progress.route.js"; // Assuming you have a progress route
+import progressRouter from "./routes/progress.route.js";
+import chatRouter from "./routes/chat.route.js";
 
 import cors from "cors";
 
@@ -25,7 +26,8 @@ console.log("Mongo is connected successfully!");
 app.use("/users", usersRouter);
 app.use("/auth", authRouter);
 app.use("/course", courseRouter);
-app.use("/progress", progressRouter); // Assuming you have a progress route
+app.use("/progress", progressRouter);
+app.use("/chat", chatRouter);
 
 app.listen(PORT, () => console.log(`The server started in: ${PORT} ✨✨`));
 export { client };
