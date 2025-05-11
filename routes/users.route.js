@@ -28,7 +28,7 @@ const transporter = createTransport({
   secure: process.env.SMTP_SECURE === "true",
 
   auth: {
-    user: "skilled2715@gmail.com",
+    user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
 });
@@ -154,34 +154,38 @@ router.delete("/:id", auth, async function (req, res) {
 
 // POST /users/forgot-password
 router.post("/forgot-password", async (req, res) => {
-  const { email } = req.body;
-  const user = await findEmail(email);
-  if (!user) {
-    return res.send({
+  try {
+    const { email } = req.body;
+    const user = await findEmail(email);
+
+    if (!user) {
+      return res.send({
+        message:
+          "If that email is registered, you’ll get a reset link shortly.",
+      });
+    }
+
+    const token = jwt.sign({ id: user._id }, process.env.SECRET_KEY, {
+      expiresIn: "1h",
+    });
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+    await saveResetToken(user._id, token, expiresAt);
+
+    const resetLink = `${process.env.FRONTEND_URL}/reset-password/${token}`;
+    await transporter.sendMail({
+      from: `"Skilled Support" <${process.env.SMTP_USER}>`,
+      to: user.email,
+      subject: "Your password reset link",
+      html: `<p>Hi ${user.name},</p><p>Click <a href="${resetLink}">here</a> to reset your password.</p>`,
+    });
+
+    res.send({
       message: "If that email is registered, you’ll get a reset link shortly.",
     });
+  } catch (err) {
+    console.error("Error in /forgot-password:", err);
+    res.status(500).send({ message: "Server error. Please try again later." });
   }
-
-  const token = jwt.sign({ id: user._id }, process.env.SECRET_KEY, {
-    expiresIn: "1h",
-  });
-  const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
-  await saveResetToken(user._id, token, expiresAt);
-  const resetLink = `${process.env.FRONTEND_URL}/reset-password/${token}`;
-  await transporter.sendMail({
-    from: `"Skilled Support" <${process.env.SMTP_USER}>`,
-    to: user.email,
-    subject: "Your password reset link",
-    html: `
-      <p>Hi ${user.name},</p>
-      <p>Click <a href="${resetLink}">here</a> to reset your password. This link expires in 1 hour.</p>
-      <p>If you didn’t request this, just ignore.</p>
-    `,
-  });
-
-  res.send({
-    message: "If that email is registered, you’ll get a reset link shortly.",
-  });
 });
 
 router.post("/reset-password/:token", async (req, res) => {
