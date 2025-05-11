@@ -5,25 +5,30 @@ import {
   createUsers,
   getAllUsers,
   getUserByName,
+  getUserByEmail,
   getUserById,
   updateUserById,
   deleteUserById,
+  saveResetToken,
+  getResetTokenDoc,
+  deleteResetToken,
+  findEmail,
 } from "../services/users.service.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import * as dotenv from "dotenv";
 import { auth } from "../middleware/auth.js";
 dotenv.config();
-import nodemailer from "nodemailer";
+import { createTransport } from "nodemailer";
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: process.env.SMTP_PORT,
+const transporter = createTransport({
+  host: "smtp.gmail.com",
+  port: 465,
 
   secure: process.env.SMTP_SECURE === "true",
 
   auth: {
-    user: process.env.SMTP_USER,
+    user: "skilled2715@gmail.com",
     pass: process.env.SMTP_PASS,
   },
 });
@@ -150,10 +155,7 @@ router.delete("/:id", auth, async function (req, res) {
 // POST /users/forgot-password
 router.post("/forgot-password", async (req, res) => {
   const { email } = req.body;
-  const user = await client
-    .db("skilled")
-    .collection("users")
-    .findOne({ email });
+  const user = await findEmail(email);
   if (!user) {
     return res.send({
       message: "If that email is registered, you’ll get a reset link shortly.",

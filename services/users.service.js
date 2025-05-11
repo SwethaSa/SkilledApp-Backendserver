@@ -55,3 +55,7 @@ export async function getResetTokenDoc(token) {
 export async function deleteResetToken(token) {
   await client.db("skilled").collection("token").deleteOne({ token });
 }
+
+export async function findEmail(email) {
+  return client.db("skilled").collection("users").findOne({ email });
+}
