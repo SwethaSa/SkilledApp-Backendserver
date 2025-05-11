@@ -21,52 +21,6 @@ import { auth } from "../middleware/auth.js";
 dotenv.config();
 import { createTransport } from "nodemailer";
 
-const emailHtml = `
-  <div style="
-    background: #ff5733;
-    padding: 30px;
-    font-family: 'YourFrontEndFont', sans-serif;
-    color: #ffffff;
-    text-align: center;
-  ">
-    <!-- Title -->
-    <h1 style="
-      margin: 0 0 20px;
-      font-size: 2rem;
-      font-weight: bold;
-    ">Skill’ED</h1>
-
-    <!-- Greeting -->
-    <p style="margin: 0 0 16px; font-size: 1rem;">
-      Hi ${user.name},
-    </p>
-
-    <!-- Instruction with styled link -->
-    <p style="margin: 0 0 24px; font-size: 1rem;">
-      Click the button below to reset your password:
-    </p>
-    <a
-      href="${resetLink}"
-      style="
-        display: inline-block;
-        padding: 12px 24px;
-        background: #ffffff;
-        color: #ff5733;
-        text-decoration: none;
-        font-weight: 500;
-        border-radius: 6px;
-      "
-    >
-      Reset Password
-    </a>
-
-    <!-- Footer note -->
-    <p style="margin: 32px 0 0; font-size: 0.875rem; opacity: 0.9;">
-      If you didn’t request a password reset, just ignore this email.
-    </p>
-  </div>
-`;
-
 const transporter = createTransport({
   host: "smtp.gmail.com",
   port: 465,
@@ -215,6 +169,52 @@ router.post("/forgot-password", async (req, res) => {
     await saveResetToken(user._id, token, expiresAt);
 
     const resetLink = `${process.env.FRONTEND_URL}/reset-password/${token}`;
+
+    const emailHtml = `
+  <div style="
+    background: #ff5733;
+    padding: 30px;
+    font-family: 'YourFrontEndFont', sans-serif;
+    color: #ffffff;
+    text-align: center;
+  ">
+    <!-- Title -->
+    <h1 style="
+      margin: 0 0 20px;
+      font-size: 2rem;
+      font-weight: bold;
+    ">Skill’ED</h1>
+
+    <!-- Greeting -->
+    <p style="margin: 0 0 16px; font-size: 1rem;">
+      Hi ${user.name},
+    </p>
+
+    <!-- Instruction with styled link -->
+    <p style="margin: 0 0 24px; font-size: 1rem;">
+      Click the button below to reset your password:
+    </p>
+    <a
+      href="${resetLink}"
+      style="
+        display: inline-block;
+        padding: 12px 24px;
+        background: #ffffff;
+        color: #ff5733;
+        text-decoration: none;
+        font-weight: 500;
+        border-radius: 6px;
+      "
+    >
+      Reset Password
+    </a>
+
+    <!-- Footer note -->
+    <p style="margin: 32px 0 0; font-size: 0.875rem; opacity: 0.9;">
+      If you didn’t request a password reset, just ignore this email.
+    </p>
+  </div>
+`;
     await transporter.sendMail({
       from: `"Skilled Support" <${process.env.SMTP_USER}>`,
       to: user.email,
